@@ -1,7 +1,7 @@
 #!/usr/local/bin/bash
 
 date=`/bin/date '+%F_%T'`
-curdir="$(dirname $0)"
+curdir="$(cd "$(dirname $0)" && pwd)"
 
 # Step 1 - Sanity checking
 if [ ! -f "pkgs.txt" ]; then
@@ -37,5 +37,5 @@ for pkg in `cat pkgs.txt`; do
     exec 2>&1
 
     cd /usr/ports/$pkg
-    sudo make DISABLE_LICENSES=YES BATCH=YES package-recursive clean | tee -a $curdir/logs/$date
+    sudo make DISABLE_LICENSES=YES BATCH=YES clean package-recursive clean | tee -a $curdir/logs/$date
 done
