@@ -1,5 +1,9 @@
 #!/bin/sh
 
+# Security-related variables
+email="lattera@gmail.com"
+date=`date '+%F_%T'`
+
 if [ $# -lt 2 ]; then
 	echo "USAGE: $0 <account> <name>"
 	exit 1
@@ -10,7 +14,7 @@ name=$2
 
 cd ~/clients
 
-pfexec zfs snapshot tank/zones/appdata/git/data/git@delete:`date '+%F_%T'`
+pfexec zfs snapshot tank/zones/appdata/git/data/git@delete:$date
 
 status=0
 if [ -d $account/$name.git ]; then
@@ -21,10 +25,10 @@ else
 	status=1
 fi
 
-mail lattera@gmail.com <<EOF
+mail $email <<EOF
 Subject: [git] Repo Deleted
 
-Repo ${name} deleted for account ${account}. Status: ${status}.
+Repo ${name} deleted for account ${account} on ${date}. Status: ${status}.
 EOF
 
 exit $status

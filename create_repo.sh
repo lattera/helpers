@@ -1,5 +1,9 @@
 #!/bin/sh
 
+# Security-related variables
+email="lattera@gmail.com"
+date=`date '+%F_%T'`
+
 if [ $# -lt 2 ]; then
 	echo "USAGE: $0 <account> <name>"
 	exit 1
@@ -15,7 +19,7 @@ fi
 
 cd ~
 
-pfexec zfs snapshot tank/zones/appdata/git/data/git@create:`date '+%F_%T'`
+pfexec zfs snapshot tank/zones/appdata/git/data/git@create:$date
 
 if [ ! -d clients/$account/$name.git ]; then
 	mkdir -p clients/$account/$name.git
@@ -37,10 +41,10 @@ fi
 
 status=$?
 
-mail lattera@gmail.com <<EOF
+mail $email <<EOF
 Subject: [git] Repo Created
 
-Repo ${name} created for account ${account}. Status: ${status}
+Repo ${name} created for account ${account} on ${date}. Status: ${status}
 EOF
 
 exit $status
