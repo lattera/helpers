@@ -15,6 +15,8 @@ fi
 
 cd ~
 
+pfexec zfs snapshot tank/zones/appdata/git/data/git@create:`date '+%F_%T'`
+
 if [ ! -d clients/$account/$name.git ]; then
 	mkdir -p clients/$account/$name.git
 	if [ ! $? -eq 0 ]; then
@@ -33,4 +35,12 @@ if [ ! "$upstream" == "" ]; then
 	git --bare fetch $upstream master:master
 fi
 
-exit $?
+status=$?
+
+mail lattera@gmail.com <<EOF
+Subject: [git] Repo Created
+
+Repo ${name} created for account ${account}. Status: ${status}
+EOF
+
+exit $status
