@@ -22,7 +22,7 @@ else
 fi
 
 mail lattera@gmail.com <<EOF
-Subject: Repo Deleted
+Subject: [git] Repo Deleted
 
 Repo ${name} deleted for account ${account}. Status: ${status}.
 EOF
