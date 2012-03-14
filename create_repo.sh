@@ -3,6 +3,7 @@
 # Security-related variables
 email="lattera@gmail.com"
 date=`date '+%F_%T'`
+dataset="tank/zones/appdata/git/data/git"
 
 if [ $# -lt 2 ]; then
 	echo "USAGE: $0 <account> <name>"
@@ -19,7 +20,7 @@ fi
 
 cd ~
 
-pfexec zfs snapshot tank/zones/appdata/git/data/git@create:$date
+pfexec zfs snapshot $dataset@create:$date
 
 if [ ! -d clients/$account/$name.git ]; then
 	mkdir -p clients/$account/$name.git
