@@ -11,7 +11,7 @@ v4client="10.8.0.6"
 vpnserver="10.8.0.1"
 v6host="2001:470:8142:3::1"
 v6client="2001:470:8142:3::2"
-v6local="2001:470:8142:5::1"
+v6local="2001:470:8142:5::1/64"
 localdevice="alc0"
 
 configdir=${1}
@@ -60,7 +60,7 @@ if [ ! $? -eq 0 ]; then
 fi
 
 echo "[+] Adding IPv6 address to local network."
-sudo ifconfig ${localdevice} ${v6local}
+sudo ifconfig ${localdevice} inet6 alias ${v6local}
 if [ ! $? -eq 0 ]; then
     echo "[-] Could not add IPv6 address to local network. Exiting."
     exit 1
