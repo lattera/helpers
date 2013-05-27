@@ -9,6 +9,7 @@ function usage() {
     echo "    -m    [mount point]             (optional, default /mnt/[BE name])"
     echo "    -s    Use sudo                  (optional, default to no)"
     echo "    -p    [ports]                   (optional, rebuild certain ports)"
+    echo "    -P                              (optional, update all ports)"
     exit 1
 }
 
@@ -83,6 +84,56 @@ function portbuild() {
     ${lsudo} umount ${lmnt}/dev
     ${lsudo} umount ${lmnt}/usr/ports
     ${lsudo} umount ${lmnt}/usr/src
+
+    return ${ret}
+}
+
+function pkgup() {
+    lmnt=${1}
+    lsudo=${2}
+
+    ${lsudo} mount -t nullfs /usr/ports ${lmnt}/usr/ports
+    ret=${?}
+    if [ ! ${ret} -eq 0 ]; then
+        echo "[-] Could not mount ports nullfs in chroot"
+        return ${ret}
+    fi
+
+    ${lsudo} mount -t nullfs /usr/src ${lmnt}/usr/src
+    ret=${?}
+    if [ ! ${ret} -eq 0 ]; then
+        ${lsudo} umount ${lmnt}/usr/ports
+
+        echo "[-] Could not mount src nullfs in chroot"
+        return ${ret}
+    fi
+
+    ${lsudo} mount -t devfs devfs ${lmnt}/dev
+    ret=${?}
+    if [ ! ${ret} -eq 0 ]; then
+        ${lsudo} umount ${lmnt}/usr/ports
+        ${lsudo} umount ${lmnt}/usr/src
+
+        echo "[-] Could not mount devfs in chroot"
+        return ${ret}
+    fi
+
+    ${lsudo} chroot ${lmnt} portmaster -awHD --no-confirm
+    ret=${?}
+    if [ ! ${ret} -eq 0 ]; then
+        echo "[-] Rebuilding ports failed"
+
+        ${lsudo} umount ${lmnt}/usr/ports
+        ${lsudo} umount ${lmnt}/usr/src
+        ${lsudo} umount ${lmnt}/dev
+        return ${ret}
+    fi
+
+    ${lsudo} umount ${lmnt}/dev
+    ${lsudo} umount ${lmnt}/usr/ports
+    ${lsudo} umount ${lmnt}/usr/src
+
+    return 0
 }
 
 if [ ${#@} -lt 2 ]; then
@@ -92,12 +143,13 @@ fi
 bename=""
 oldbename=""
 buildme="false"
+pkgups="false"
 kernel="SEC"
 mntpoint=""
 sudo=""
 ports=""
 
-while getopts 'b:e:k:m:p:Bsh' o; do
+while getopts 'b:e:k:m:p:BPsh' o; do
     case "${o}" in
         b)
             bename=${OPTARG}
@@ -116,6 +168,9 @@ while getopts 'b:e:k:m:p:Bsh' o; do
             ;;
         p)
             ports="${OPTARG}"
+            ;;
+        P)
+            pkgups="true"
             ;;
         s)
             sudo=$(which sudo)
@@ -180,6 +235,17 @@ if [ ! ${?} -eq 0 ]; then
     ${sudo} ${beadm} umount ${bename}
     ${sudo} ${beadm} destroy -F ${bename}
     exit 1
+fi
+
+if [ "${pkgups}" = "true" ]; then
+    echo "[+] Updating ports"
+    pkgup ${mntpoint} ${sudo}
+    if [ ! ${?} -eq 0 ]; then
+        echo "    [-] Rebuilding ports failed"
+        ${sudo} ${beadm} umount ${bename}
+        ${sudo} ${beadm} destroy -F ${bename}
+        exit 1
+    fi
 fi
 
 if [ ${#ports} -gt 0 ]; then
